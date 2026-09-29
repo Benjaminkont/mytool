@@ -1,0 +1,12 @@
+[project]
+name = "mytool"
+version = "0.1.0"
+
+dependencies = ["openai", "python-dotenv", "httpx2[socks]"]
+
+
+[project.scripts]
+mytool = "mytool.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["mytool*"]
