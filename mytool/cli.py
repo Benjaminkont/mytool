@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import argparse
 import sys
+
 from openai import APIError
-from mytool.commands.trans import translate
-from mytool.commands.find import find
-from mytool.commands.summary import summary
+
 from mytool.commands.ask import ask
+from mytool.commands.find import find
+from mytool.commands.init import init
+from mytool.commands.summary import summary
+from mytool.commands.trans import translate
+
 
 def verify(text : str) -> bool:
-    if(len(text.strip()) == 0):
-        return True
-    else:
-        return False
+    return len(text.strip()) == 0
 
 
 
@@ -40,7 +41,14 @@ def main():
     ask_parser.set_defaults(func=ask)
     ask_parser.add_argument("question")
 
+    init_parser = sub_parser.add_parser("init")
+    init_parser.set_defaults(func=init)
+
     args = parser.parse_args()
+
+    if(args.command == "init"):
+        args.func()
+        return
 
     text = sys.stdin.read()
     if verify(text):
@@ -57,6 +65,9 @@ def main():
 
         elif(args.command == "find" or args.command == "ask"):
             result = args.func(text, args.question)
+
+
+
     except RuntimeError as error:
         parser.exit(1, f"mytool: {error}\n")
 
@@ -65,7 +76,7 @@ def main():
 
     if result is None:
         parser.exit(1, "mytool: 模型没有返回文本\n")
-    
+
     print(result)
 
 

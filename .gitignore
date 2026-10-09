@@ -6,3 +6,5 @@ build/
 dist/
 *.egg-info/
 mytool/db/*.db
+Learn
+doc/Turital

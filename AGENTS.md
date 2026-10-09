@@ -6,7 +6,7 @@
 - `mytool/cli.py` 已定义 `main()`，使用 `argparse` 提供 `trans`、`find`、`sum` 和 `ask` 四个子命令。CLI 解析参数后读取标准输入，拒绝空白输入，分发命令并输出结果或错误。
 - 四个命令分别位于 `mytool/commands/`：`trans` 翻译成中文，`find` 根据传入的命令帮助文本回答问题，`sum` 总结文本，`ask` 根据传入的文本回答问题（当前提示词侧重日志分析）。`find` 和 `ask` 的问题由命令参数提供。
 - `mytool/config.py` 从 `~/.config/mytool/.env` 或同名环境变量读取 `DEEPSEEK_API_KEY` 和 `BASE_URL`，并创建兼容 DeepSeek 接口的 OpenAI 客户端。各命令目前分别编写模型请求逻辑，存在重复代码。
-- `README.md` 已提供项目介绍、安装配置和使用示例；`doc/阶段 1.md` 记录开发过程。`mytool/__main__.py` 已接入 CLI，可通过 `python -m mytool` 启动；仓库没有自动化测试配置，也没有 `LICENSE` 文件。
+- `README.md` 已提供项目介绍、安装配置和使用示例；`doc/阶段一.md` 记录开发过程。`mytool/__main__.py` 已接入 CLI，可通过 `python -m mytool` 启动；仓库没有自动化测试配置，也没有 `LICENSE` 文件。
 - Python 源码曾通过本地语法检查，但 README 中的安装步骤和真实 API 返回结果尚未在本轮验证。不要把语法检查、模拟调用或阶段记录当作当前安装版本的端到端验证。
 - 记录现状即可；不要自行指定哪个命令优先开发。
 
