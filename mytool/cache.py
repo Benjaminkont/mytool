@@ -14,7 +14,8 @@ def init_db() -> None:
         try:
             db.execute("""
                 CREATE TABLE IF NOT EXISTS translations (
-                    original_text TEXT PRIMARY KEY,
+                    command TEXT PRIMARY KEY,
+                    original_text TEXT NOT NULL,
                     translated_text TEXT NOT NULL,
                     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
@@ -26,37 +27,47 @@ def init_db() -> None:
         raise RuntimeError(f"无法初始化翻译缓存：{error}") from error
 
 
-def lookup(text: str) -> str | None:
+def lookup(cmd : str, text: str) -> str | None:
     """Return a translation when the complete input text matches."""
     init_db()
     try:
         db = sqlite3.connect(DB_PATH)
         try:
-            row = db.execute(
-                "SELECT translated_text FROM translations WHERE original_text = ?",
-                (text,),
+            row_1 = db.execute(
+                "SELECT translated_text FROM translations WHERE command = ?",
+                (cmd, ),
+            ).fetchone()
+
+            row_2 = db.execute(
+                "SELECT translated_text FROM translations WHERE  original_text= ?",
+                (text, ),
             ).fetchone()
         finally:
             db.close()
     except sqlite3.Error as error:
         raise RuntimeError(f"无法读取翻译缓存：{error}") from error
 
-    return row[0] if row is not None else None
+    if row_1 is not None:
+        return row_1[0]
+    elif row_2 is not None:
+        return row_2[0]
+    else:
+        return None
 
 
-def save(text: str, translation: str) -> None:
+def save(cmd : str, text: str, translation: str) -> None:
     """Insert or replace the translation for the complete input text."""
     init_db()
     try:
         db = sqlite3.connect(DB_PATH)
         try:
             db.execute("""
-                INSERT INTO translations (original_text, translated_text)
-                VALUES (?, ?)
-                ON CONFLICT(original_text) DO UPDATE SET
+                INSERT INTO translations (command, original_text, translated_text)
+                VALUES (?, ?, ?)
+                ON CONFLICT(command) DO UPDATE SET
                     translated_text = excluded.translated_text,
                     updated_at = CURRENT_TIMESTAMP
-            """, (text, translation))
+            """, (cmd, text, translation))
             db.commit()
         finally:
             db.close()

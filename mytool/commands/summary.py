@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 from mytool.config import create_client

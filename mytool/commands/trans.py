@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
-from mytool.config import create_client
+
 from mytool.cache import lookup, save
 
 
@@ -10,6 +9,7 @@ system_prompt = "给我翻译成中文"
 
 class TransClient:
     def __init__(self, help : str):
+        from mytool.config import create_client
         self.client = create_client()
         
         self.messages : list[ChatCompletionMessageParam] = [
@@ -35,15 +35,15 @@ class TransClient:
         answer = response.choices[0].message.content
         return answer
         
-def translate(text: str, refresh: bool = False) -> str | None:
+def translate(cmd : str, text: str, refresh: bool = False) -> str | None:
     if not refresh:
-        cached = lookup(text)
+        cached = lookup(cmd, text)
         if cached is not None:
             return cached
 
     answer = TransClient(text).chat()
     if answer is not None:
-        save(text, answer)
+        save(cmd, text, answer)
     return answer
     
 if __name__ == '__main__':
