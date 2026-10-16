@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 from openai.types.chat import ChatCompletionMessageParam
-
+from mytool.console import console
 from mytool.cache import lookup, save
 
 
@@ -39,8 +39,10 @@ def translate(cmd : str, text: str, refresh: bool = False) -> str | None:
     if not refresh:
         cached = lookup(cmd, text)
         if cached is not None:
+            console.print("缓存命中成功", style="bold green")
             return cached
 
+    console.print("缓存命中失败，翻译中", style="bold white on red")
     answer = TransClient(text).chat()
     if answer is not None:
         save(cmd, text, answer)

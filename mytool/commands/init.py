@@ -30,7 +30,14 @@ def reinit():
     config_dir = HOME / ".config" / "mytool"
     config_dir.mkdir(parents=True, exist_ok=True)
 
+
+
     env_path = config_dir / ".env"
+
+    file = Path(env_path)
+    if file.exists():
+        file.unlink()
+
 
     try:
         with env_path.open("x", encoding="utf-8") as f:

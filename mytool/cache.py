@@ -7,7 +7,7 @@ DB_PATH = Path.home() / ".local" / "share" / "mytool" / "trans.db"
 
 
 def init_db() -> None:
-    """Create the database and translations table if needed."""
+    """初始化数据库"""
     try:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         db = sqlite3.connect(DB_PATH)
@@ -28,7 +28,7 @@ def init_db() -> None:
 
 
 def lookup(cmd : str, text: str) -> str | None:
-    """Return a translation when the complete input text matches."""
+    """查询是往期是否已经被翻译过"""
     init_db()
     try:
         db = sqlite3.connect(DB_PATH)
@@ -56,7 +56,7 @@ def lookup(cmd : str, text: str) -> str | None:
 
 
 def save(cmd : str, text: str, translation: str) -> None:
-    """Insert or replace the translation for the complete input text."""
+    """重置往期的翻译结果"""
     init_db()
     try:
         db = sqlite3.connect(DB_PATH)

@@ -49,7 +49,7 @@ def main():
 
     args = parser.parse_args()
 
-    if(args.command == "init"):
+    if(args.command == "init" or args.command == "reinit"):
         args.func()
         return
 
