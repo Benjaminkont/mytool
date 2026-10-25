@@ -2,7 +2,7 @@
 name = "mytool"
 version = "0.1.0"
 
-dependencies = ["openai", "python-dotenv", "httpx2[socks]"]
+dependencies = ["openai", "python-dotenv", "httpx2[socks]", "rich"]
 
 
 [project.scripts]
