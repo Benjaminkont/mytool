@@ -1,5 +1,7 @@
 import importlib
 import io
+import os
+import shlex
 import sqlite3
 import unittest
 from contextlib import ExitStack, redirect_stdout
@@ -23,6 +25,8 @@ class InitializationTests(unittest.TestCase):
         self.addCleanup(contexts.close)
         contexts.enter_context(patch.object(Path, "home", return_value=self.home))
         contexts.enter_context(patch.object(cache, "DB_PATH", self.db_path))
+        contexts.enter_context(patch.dict(os.environ))
+        os.environ.pop("ZDOTDIR", None)
         contexts.enter_context(redirect_stdout(io.StringIO()))
 
     def prepare_existing_state(self):
@@ -42,6 +46,43 @@ class InitializationTests(unittest.TestCase):
 
         self.assertEqual(self.env_path.read_bytes(), original_config)
         self.assertEqual(cache.lookup("demo --help", "hello"), "你好")
+
+    def test_init_registers_hook_once_and_preserves_startup_config(self):
+        zshrc = self.home / ".zshrc"
+        original = "export MYTOOL_TEST_MARKER=preserved"
+        zshrc.write_text(original, encoding="utf-8")
+
+        init_commands.init()
+
+        hook = self.home / ".config" / "mytool" / "hook.zsh"
+        self.assertEqual(hook.read_text(encoding="utf-8"), init_commands.HOOK_SCRIPT)
+        source_line = f"source {shlex.quote(str(hook))}"
+        configured = zshrc.read_text(encoding="utf-8")
+        self.assertTrue(configured.startswith(original + "\n"))
+        self.assertEqual(configured.splitlines().count(source_line), 1)
+
+        init_commands.init()
+
+        self.assertEqual(zshrc.read_text(encoding="utf-8"), configured)
+
+    def test_init_preserves_existing_hook_script(self):
+        hook = self.home / ".config" / "mytool" / "hook.zsh"
+        hook.parent.mkdir(parents=True)
+        custom_script = "# existing customized hook\n"
+        hook.write_text(custom_script, encoding="utf-8")
+
+        init_commands.init()
+
+        self.assertEqual(hook.read_text(encoding="utf-8"), custom_script)
+
+    def test_init_uses_custom_zdotdir(self):
+        zsh_dir = self.home / "custom zsh config"
+
+        with patch.dict(os.environ, {"ZDOTDIR": str(zsh_dir)}):
+            init_commands.init()
+
+        self.assertTrue((zsh_dir / ".zshrc").is_file())
+        self.assertFalse((self.home / ".zshrc").exists())
 
     def test_reinit_preserves_existing_config(self):
         self.prepare_existing_state()
