@@ -27,6 +27,20 @@ def init_db() -> None:
         raise RuntimeError(f"无法初始化翻译缓存：{error}") from error
 
 
+def clear_cache() -> None:
+    """清空翻译记录，保留表结构和数据库中的其他表。"""
+    init_db()
+    try:
+        db = sqlite3.connect(DB_PATH)
+        try:
+            db.execute("DELETE FROM translations")
+            db.commit()
+        finally:
+            db.close()
+    except sqlite3.Error as error:
+        raise RuntimeError(f"无法清空翻译缓存：{error}") from error
+
+
 def lookup(cmd : str, text: str) -> str | None:
     """查询是往期是否已经被翻译过"""
     init_db()

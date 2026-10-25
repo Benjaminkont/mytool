@@ -44,7 +44,7 @@ def main():
     init_parser = sub_parser.add_parser("init")
     init_parser.set_defaults(func=init)
 
-    reinit_parser = sub_parser.add_parser("reinit")
+    reinit_parser = sub_parser.add_parser("reinit", help="清空翻译缓存，保留已有 API 配置")
     reinit_parser.set_defaults(func=reinit)
 
     args = parser.parse_args()

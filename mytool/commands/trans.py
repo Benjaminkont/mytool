@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+"""
+看不懂英文输出，需通读中文全文	
+命令 | mytool trans
+命令 | mytool trans --refresh	- 必须有管道输入。
+
+- 提示词约束：忠实翻译为中文，保留命令名、子命令名、参数选项（如 -v、--help）原样不乱译，保持原有缩进排版。
+- 命中本地缓存时瞬间输出；未命中时流式打印并在完成后写入缓存。
+"""
+
+
+
 from __future__ import annotations
 from openai.types.chat import ChatCompletionMessageParam
 from mytool.console import console
