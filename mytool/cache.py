@@ -41,7 +41,7 @@ def clear_cache() -> None:
         raise RuntimeError(f"无法清空翻译缓存：{error}") from error
 
 
-def lookup(cmd : str, text: str) -> str | None:
+def lookup(cmd: str, text: str) -> str | None:
     """查询是往期是否已经被翻译过"""
     init_db()
     try:
@@ -49,12 +49,12 @@ def lookup(cmd : str, text: str) -> str | None:
         try:
             row_1 = db.execute(
                 "SELECT translated_text FROM translations WHERE command = ?",
-                (cmd, ),
+                (cmd,),
             ).fetchone()
 
             row_2 = db.execute(
                 "SELECT translated_text FROM translations WHERE  original_text= ?",
-                (text, ),
+                (text,),
             ).fetchone()
         finally:
             db.close()
@@ -69,19 +69,22 @@ def lookup(cmd : str, text: str) -> str | None:
         return None
 
 
-def save(cmd : str, text: str, translation: str) -> None:
+def save(cmd: str, text: str, translation: str) -> None:
     """重置往期的翻译结果"""
     init_db()
     try:
         db = sqlite3.connect(DB_PATH)
         try:
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO translations (command, original_text, translated_text)
                 VALUES (?, ?, ?)
                 ON CONFLICT(command) DO UPDATE SET
                     translated_text = excluded.translated_text,
                     updated_at = CURRENT_TIMESTAMP
-            """, (cmd, text, translation))
+            """,
+                (cmd, text, translation),
+            )
             db.commit()
         finally:
             db.close()

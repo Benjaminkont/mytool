@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -7,6 +8,7 @@ load_dotenv(Path.home() / ".config" / "mytool" / ".env")
 
 api_key = os.getenv("DEEPSEEK_API_KEY")
 base_url = os.getenv("BASE_URL")
+
 
 def create_client() -> OpenAI:
     if not api_key:

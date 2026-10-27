@@ -4,8 +4,7 @@ from pathlib import Path
 
 from mytool.cache import clear_cache, init_db
 
-
-HOOK_SCRIPT = '''autoload -Uz add-zsh-hook
+HOOK_SCRIPT = """autoload -Uz add-zsh-hook
 
 _mytool_preexec() {
     export MYTOOL_PIPELINE="$3"
@@ -13,7 +12,7 @@ _mytool_preexec() {
 }
 
 add-zsh-hook preexec _mytool_preexec
-'''
+"""
 
 
 def _init_zsh_hook(config_dir: Path) -> None:
@@ -55,10 +54,7 @@ def init():
     try:
         with env_path.open("x", encoding="utf-8") as f:
             env_path.chmod(0o600)
-            f.write(
-                "DEEPSEEK_API_KEY=\n"
-                "BASE_URL=https://api.deepseek.com\n"
-            )
+            f.write("DEEPSEEK_API_KEY=\nBASE_URL=https://api.deepseek.com\n")
     except FileExistsError:
         print(f"配置文件已存在:{env_path}")
     else:
@@ -68,6 +64,7 @@ def init():
     init_db()
     print("翻译数据库已准备好")
     _init_zsh_hook(config_dir)
+
 
 def reinit():
     """清空翻译缓存，保留已有配置；缺少配置时创建模板。"""

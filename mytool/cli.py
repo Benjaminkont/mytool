@@ -12,23 +12,61 @@ from mytool.commands.summary import summary
 from mytool.commands.trans import translate
 from mytool.hook import hook_fetch
 
+COMMANDS = {
+    "trans": "把管道传入的文本翻译成中文，带本机缓存（--refresh 跳过缓存）",
+    "find": '根据管道传入的命令帮助回答用法问题，例: docker --help | mytool find "问题"',
+    "sum": "总结管道传入的文本",
+    "ask": '根据管道传入的文本（如日志）回答问题，例: cat app.log | mytool ask "问题"',
+    "init": "创建配置文件、翻译数据库，并在 ~/.zshrc 中安装钩子",
+    "reinit": "清空翻译缓存，保留已有 API 配置",
+    "help": "打印这条帮助信息",
+}
 
-def verify(text : str) -> bool:
+
+def log(level: str, message: str) -> None:
+    stream = sys.stderr if level == "ERROR" else sys.stdout
+    print(f"[{level}] {message}", file=stream)
+
+
+def print_commands(level: str) -> None:
+    width = max(len(name) for name in COMMANDS)
+    log(level, "可用命令:")
+    for name, desc in COMMANDS.items():
+        log(level, f"    {name:<{width}} - {desc}")
+
+
+def verify(text: str) -> bool:
     return len(text.strip()) == 0
 
 
+def main() -> None:
+    argv = sys.argv[1:]
 
-def main():
-    parser = argparse.ArgumentParser("一个个人工具箱")
+    if not argv:
+        print_commands("ERROR")
+        log("ERROR", "没有提供命令")
+        sys.exit(1)
 
-    sub_parser = parser.add_subparsers(
-        dest="command",
-        required=True
-    )
+    if argv[0] in ("help", "-h", "--help"):
+        print_commands("INFO")
+        return
+
+    if argv[0] not in COMMANDS:
+        print_commands("ERROR")
+        log("ERROR", f"未知命令 `{argv[0]}`")
+        sys.exit(1)
+
+    parser = argparse.ArgumentParser(prog="mytool", description="一个个人工具箱")
+
+    sub_parser = parser.add_subparsers(dest="command", required=True)
 
     trans_parser = sub_parser.add_parser("trans")
     trans_parser.set_defaults(func=translate)
-    trans_parser.add_argument("--refresh", action="store_true", help="跳过缓存并重新翻译")
+    trans_parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="跳过缓存并重新翻译",
+    )
 
     find_parser = sub_parser.add_parser("find")
     find_parser.set_defaults(func=find)
@@ -44,12 +82,15 @@ def main():
     init_parser = sub_parser.add_parser("init")
     init_parser.set_defaults(func=init)
 
-    reinit_parser = sub_parser.add_parser("reinit", help="清空翻译缓存，保留已有 API 配置")
+    reinit_parser = sub_parser.add_parser(
+        "reinit",
+        help="清空翻译缓存，保留已有 API 配置",
+    )
     reinit_parser.set_defaults(func=reinit)
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
-    if(args.command == "init" or args.command == "reinit"):
+    if args.command == "init" or args.command == "reinit":
         args.func()
         return
 
@@ -68,10 +109,8 @@ def main():
         elif args.command == "sum":
             result = args.func(text)
 
-        elif(args.command == "find" or args.command == "ask"):
+        elif args.command == "find" or args.command == "ask":
             result = args.func(text, args.question)
-
-
 
     except RuntimeError as error:
         parser.exit(1, f"mytool: {error}\n")

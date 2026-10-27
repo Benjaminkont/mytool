@@ -8,3 +8,4 @@ dist/
 mytool/db/*.db
 doc/Turital
 Learn
+uv.lock
