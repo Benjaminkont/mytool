@@ -150,6 +150,30 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
     )
     help_parser.add_argument("topic", nargs="?", metavar="命令", help="要查看的命令名")
 
+    woman_parser = add_command(
+        sub_parser,
+        "woman",
+        help="在终端中查看 man 手册",
+        description="按手册名称查看中文 man 手册，无需管道输入。翻译与展示功能尚未实现。",
+        epilog=(
+            "示例:\n"
+            "  mytool woman ls\n"
+            "  mytool woman printf --section 3\n"
+            "  mytool woman ls --refresh\n"
+            "  mytool woman ls --original"
+        ),
+    )
+    woman_parser.set_defaults(func=woman)
+    woman_parser.add_argument("manual_name", help="要查看的手册名称")
+    woman_parser.add_argument("--section", help="指定手册章节号")
+    woman_mode = woman_parser.add_mutually_exclusive_group()
+    woman_mode.add_argument(
+        "--refresh", action="store_true", help="跳过缓存并重新翻译"
+    )
+    woman_mode.add_argument(
+        "--original", action="store_true", help="显示原始 man 手册，不进行翻译"
+    )
+
     return parser, sub_parser.choices
 
 
@@ -186,6 +210,18 @@ def main() -> None:
 
     if args.command == "init" or args.command == "reinit":
         args.func()
+        return
+
+    if args.command == "woman":
+        try:
+            args.func(
+                args.manual_name,
+                section=args.section,
+                refresh=args.refresh,
+                original=args.original,
+            )
+        except RuntimeError as error:
+            parser.exit(1, f"error: {error}\n")
         return
 
     command_parser = commands[args.command]
