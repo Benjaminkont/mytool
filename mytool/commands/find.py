@@ -43,4 +43,4 @@ def find(text: str, question: str) -> str | None:
 
 
 if __name__ == "__main__":
-    assert "hello,world"
+    assert False

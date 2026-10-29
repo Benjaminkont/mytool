@@ -32,4 +32,4 @@ def summary(text: str) -> str | None:
 
 
 if __name__ == "__main__":
-    assert "hello,world"
+    assert False

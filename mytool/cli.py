@@ -129,7 +129,7 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         epilog=(
             "示例:\n"
             "  mytool woman ls\n"
-            "  mytool woman printf --section 3\n"
+            "  mytool woman 3 printf\n"
             "  mytool woman ls --refresh\n"
             "  mytool woman ls --original"
         ),
