@@ -11,6 +11,7 @@ from mytool.commands.find import find
 from mytool.commands.init import init, reinit
 from mytool.commands.summary import summary
 from mytool.commands.trans import translate
+from mytool.commands.woman import woman
 from mytool.hook import hook_fetch
 
 
@@ -120,6 +121,26 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
     )
     reinit_parser.set_defaults(func=reinit)
 
+    woman_parser = add_command(
+        sub_parser,
+        "woman",
+        help="将 man 的文本翻译成中文",
+        description="翻译 man 中命令内容 同时保留 man 的显示优势以及命令优势",
+        epilog="示例:\n  mytool woman <原本 man 命令内容>",
+    )
+    woman_parser.set_defaults(func=woman)
+    woman_parser.add_argument(
+        "man_args",
+        nargs="+",
+        metavar="参数",
+        help="传给 man 的参数 例如 ls 或 3 printf",
+    )
+    woman_parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="跳过缓存并重新翻译",
+    )
+
     help_parser = add_command(
         sub_parser,
         "help",
@@ -134,6 +155,16 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
 
 def verify(text: str) -> bool:
     return len(text.strip()) == 0
+
+
+def read_pipe(command_parser: MytoolParser) -> str:
+    if sys.stdin.isatty():
+        command_parser.error("没有管道输入！")
+
+    text = sys.stdin.read()
+    if verify(text):
+        command_parser.error("管道输入的内容为空！")
+    return text
 
 
 def main() -> None:
@@ -162,8 +193,6 @@ def main() -> None:
     if sys.stdin.isatty():
         command_parser.error("没有收到管道输入")
 
-    cmd = hook_fetch()
-
     text = sys.stdin.read()
     if verify(text):
         command_parser.error("管道传入的文本为空")
@@ -172,6 +201,7 @@ def main() -> None:
 
     try:
         if args.command == "trans":
+            cmd = hook_fetch()
             result = args.func(cmd, text, refresh=args.refresh)
 
         elif args.command == "sum":
@@ -179,6 +209,9 @@ def main() -> None:
 
         elif args.command == "find" or args.command == "ask":
             result = args.func(text, args.question)
+
+        elif args.command == "woman":
+            result = args.func(text)
 
     except RuntimeError as error:
         parser.exit(1, f"error: {error}\n")
