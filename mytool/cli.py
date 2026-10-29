@@ -124,35 +124,6 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
     woman_parser = add_command(
         sub_parser,
         "woman",
-        help="将 man 的文本翻译成中文",
-        description="翻译 man 中命令内容 同时保留 man 的显示优势以及命令优势",
-        epilog="示例:\n  mytool woman <原本 man 命令内容>",
-    )
-    woman_parser.set_defaults(func=woman)
-    woman_parser.add_argument(
-        "man_args",
-        nargs="+",
-        metavar="参数",
-        help="传给 man 的参数 例如 ls 或 3 printf",
-    )
-    woman_parser.add_argument(
-        "--refresh",
-        action="store_true",
-        help="跳过缓存并重新翻译",
-    )
-
-    help_parser = add_command(
-        sub_parser,
-        "help",
-        help="显示 mytool 或某个命令的帮助",
-        description="不带参数时显示 mytool 的帮助；带上命令名时显示该命令的帮助。",
-        epilog="示例:\n  mytool help\n  mytool help find",
-    )
-    help_parser.add_argument("topic", nargs="?", metavar="命令", help="要查看的命令名")
-
-    woman_parser = add_command(
-        sub_parser,
-        "woman",
         help="在终端中查看 man 手册",
         description="按手册名称查看中文 man 手册，无需管道输入。翻译与展示功能尚未实现。",
         epilog=(
@@ -164,15 +135,35 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         ),
     )
     woman_parser.set_defaults(func=woman)
-    woman_parser.add_argument("manual_name", help="要查看的手册名称")
-    woman_parser.add_argument("--section", help="指定手册章节号")
+    woman_parser.add_argument(
+        "section",
+        nargs="?",
+        help="指定手册章节号",
+    )
+    woman_parser.add_argument(
+        "manual_name",
+        help="要查看的手册名称",
+    )
     woman_mode = woman_parser.add_mutually_exclusive_group()
     woman_mode.add_argument(
-        "--refresh", action="store_true", help="跳过缓存并重新翻译"
+        "--refresh",
+        action="store_true",
+        help="跳过缓存并重新翻译",
     )
     woman_mode.add_argument(
-        "--original", action="store_true", help="显示原始 man 手册，不进行翻译"
+        "--original",
+        action="store_true",
+        help="显示原始 man 手册，不进行翻译",
     )
+
+    help_parser = add_command(
+        sub_parser,
+        "help",
+        help="显示 mytool 或某个命令的帮助",
+        description="不带参数时显示 mytool 的帮助；带上命令名时显示该命令的帮助。",
+        epilog="示例:\n  mytool help\n  mytool help find",
+    )
+    help_parser.add_argument("topic", nargs="?", metavar="命令", help="要查看的命令名")
 
     return parser, sub_parser.choices
 
@@ -208,34 +199,24 @@ def main() -> None:
             parser.error(f"'{args.topic}' 不是 mytool 的命令")
         return
 
-    if args.command == "init" or args.command == "reinit":
-        args.func()
-        return
+    result: str | None = None
 
-    if args.command == "woman":
-        try:
+    try:
+        if args.command == "init" or args.command == "reinit":
+            args.func()
+            return
+
+        if args.command == "woman":
             args.func(
                 args.manual_name,
                 section=args.section,
                 refresh=args.refresh,
                 original=args.original,
             )
-        except RuntimeError as error:
-            parser.exit(1, f"error: {error}\n")
-        return
+            return
 
-    command_parser = commands[args.command]
+        text = read_pipe(commands[args.command])
 
-    if sys.stdin.isatty():
-        command_parser.error("没有收到管道输入")
-
-    text = sys.stdin.read()
-    if verify(text):
-        command_parser.error("管道传入的文本为空")
-
-    result = ""
-
-    try:
         if args.command == "trans":
             cmd = hook_fetch()
             result = args.func(cmd, text, refresh=args.refresh)
@@ -245,9 +226,6 @@ def main() -> None:
 
         elif args.command == "find" or args.command == "ask":
             result = args.func(text, args.question)
-
-        elif args.command == "woman":
-            result = args.func(text)
 
     except RuntimeError as error:
         parser.exit(1, f"error: {error}\n")

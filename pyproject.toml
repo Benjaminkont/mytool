@@ -1,6 +1,7 @@
 [project]
 name = "mytool"
 version = "0.1.0"
+requires-python = ">=3.10"
 
 dependencies = ["openai", "python-dotenv", "httpx2[socks]", "rich"]
 
@@ -10,3 +11,7 @@ mytool = "mytool.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["mytool*"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
