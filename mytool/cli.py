@@ -6,11 +6,12 @@ from typing import NoReturn
 
 from openai import APIError
 
-from mytool.commands.ask import ask
-from mytool.commands.find import find
+
 from mytool.commands.init import init, reinit
-from mytool.commands.summary import summary
 from mytool.commands.trans import translate
+from mytool.commands.how import how
+from mytool.commands.explain import explain
+from mytool.commands.log import log
 from mytool.commands.woman import woman
 from mytool.hook import hook_fetch
 
@@ -71,35 +72,6 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         help="跳过缓存并重新翻译",
     )
 
-    find_parser = add_command(
-        sub_parser,
-        "find",
-        help="根据命令帮助文本回答用法问题",
-        description="把某个命令的帮助文本通过管道传入，再用参数提出问题，回答该命令怎么用。",
-        epilog='示例:\n  git log --help | mytool find "怎么只看最近 5 条提交"',
-    )
-    find_parser.set_defaults(func=find)
-    find_parser.add_argument("question", help="想问的问题，含空格时请加引号")
-
-    summary_parser = add_command(
-        sub_parser,
-        "sum",
-        help="总结输入的文本",
-        description="把通过管道传入的文本总结成中文摘要。",
-        epilog="示例:\n  cat README.md | mytool sum",
-    )
-    summary_parser.set_defaults(func=summary)
-
-    ask_parser = add_command(
-        sub_parser,
-        "ask",
-        help="根据输入的文本回答问题（侧重日志分析）",
-        description="把日志等文本通过管道传入，再用参数提出问题，根据文本内容作答。",
-        epilog='示例:\n  cat app.log | mytool ask "为什么启动失败"',
-    )
-    ask_parser.set_defaults(func=ask)
-    ask_parser.add_argument("question", help="想问的问题，含空格时请加引号")
-
     init_parser = add_command(
         sub_parser,
         "init",
@@ -154,6 +126,70 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         "--original", action="store_true", help="显示原始 man 手册，不进行翻译"
     )
 
+    how_parser = add_command(
+        sub_parser,
+        "how",
+        help="根据命令帮助文本回答用法问题（侧重命令行工具）",
+        description=(
+            "把某个命令的帮助文本通过管道传入，再用参数提出问题，回答该命令怎么用。"
+            "如果没有管道输入，则直接根据当前系统环境给出可复制的命令与一句话解释。"
+        ),
+        epilog='示例:\n  docker --help | mytool how "怎么用 compose"\n  mytool how "怎么看 8080 端口被谁占了"',
+    )
+
+    how_parser.set_defaults(func=how)
+    how_parser.add_argument("question", help="想问的问题，含空格时记得加引号")
+
+    explain_parser = add_command(
+        sub_parser,
+        "explain",
+        help="逐段拆解命令字符串并解释各个参数的含义",
+        description=(
+            "把用户提供的命令字符串逐段拆解，并用大白话解释每个参数的含义。"
+            "如果命令中有潜在风险（如删除文件、覆盖数据、修改系统权限等），会醒目标注。"
+        ),
+        epilog='示例:\n  mytool explain "find . -mtime +7 -exec rm -rf {} \\;"',
+    )
+    explain_parser.set_defaults(func=explain)
+    explain_parser.add_argument(
+        "command_text",
+        help="要解释的命令字符串，含空格时记得加引号",
+    )
+
+    log_parser = add_command(
+        sub_parser,
+        "log",
+        help="分析管道传入的命令输出或日志",
+        description=(
+            "必须通过管道传入日志。没有问题时自动总结异常；"
+            "提供问题时针对该问题分析。"
+        ),
+        epilog=(
+            "示例:\n"
+            "  journalctl -n 100 | mytool log\n"
+            "  docker ps -a | mytool log \"为什么退出了\""
+        ),
+    )
+    log_parser.set_defaults(func=log)
+    log_parser.add_argument(
+        "question",
+        nargs="?",
+        help="想问的问题，含空格时记得加引号",
+    )
+    log_mode = log_parser.add_mutually_exclusive_group()
+    log_mode.add_argument(
+        "--filter",
+        dest="apply_filter",
+        action="store_true",
+        help="强制使用本地压缩后的日志证据",
+    )
+    log_mode.add_argument(
+        "--no-filter",
+        dest="no_filter",
+        action="store_true",
+        help="强制把完整日志传给模型",
+    )
+
     return parser, sub_parser.choices
 
 
@@ -196,19 +232,29 @@ def main() -> None:
 
     command_parser = commands[args.command]
 
-    if sys.stdin.isatty():
-        command_parser.error("没有收到管道输入")
-
     cmd = hook_fetch()
 
-    text = sys.stdin.read()
-    if verify(text):
-        command_parser.error("管道传入的文本为空")
+    # 只有标准输入不是终端时才读取，避免无管道运行时一直等待输入。
+    has_stdin = not sys.stdin.isatty()
+    text: str | None = None
+
+    if has_stdin:
+        text = sys.stdin.read()
+        if verify(text):
+            command_parser.error("管道传入的文本为空")
+    elif args.command not in ("how", "explain"):
+        command_parser.error("没有收到管道输入")
 
     result = ""
 
     try:
-        if args.command == "trans":
+        if args.command == "how":
+            result = args.func(text, args.question, command=cmd)
+
+        elif args.command == "explain":
+            result = args.func(args.command_text)
+
+        elif args.command == "trans":
             result = args.func(cmd, text, refresh=args.refresh)
 
         elif args.command == "sum":
@@ -216,6 +262,15 @@ def main() -> None:
 
         elif args.command == "find" or args.command == "ask":
             result = args.func(text, args.question)
+
+        elif args.command == "log":
+            result = args.func(
+                text,
+                question=args.question,
+                command=cmd,
+                apply_filter=args.apply_filter,
+                no_filter=args.no_filter,
+            )
 
     except RuntimeError as error:
         parser.exit(1, f"error: {error}\n")

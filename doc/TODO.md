@@ -44,13 +44,14 @@
 ### 第三阶段：实现核心子命令与 CLI 分发（`commands/` & `cli.py`）
 - [ ] **升级 `mytool/commands/trans.py`**：改用统一流式请求函数，优化技术文本翻译提示词（保留参数与命令名原样、保持格式）。
 - [ ] **新建 `mytool/commands/how.py`（替代原 `find.py`）**：实现“无管道直接推荐命令”与“有管道基于 `--help` 查找用法/引导子命令”双模式。
-- [ ] **新建 `mytool/commands/log.py`（替代并合并原 `summary.py` 与 `ask.py`）**：实现 `question` 可选的日志降噪总结与针对性答疑。
-- [ ] **新建 `mytool/commands/explain.py`**：实现长命令逐参数大白话拆解与危险操作排雷。
+- [x] **新建 `mytool/commands/log.py`（替代并合并原 `summary.py` 与 `ask.py`）**：实现 `question` 可选的日志降噪总结与针对性答疑（第一版本地统计、重复模板折叠和证据压缩已完成）。
+- [x] **新建 `mytool/commands/explain.py`**：实现长命令逐参数大白话拆解与危险操作排雷。
 - [ ] **重构 `mytool/cli.py`**：
-  - [ ] 注册 `init`、`reinit`、`trans`、`how`、`log`、`explain` 子命令。
-  - [ ] 修复 `reinit` 未在读取 `stdin` 前返回的问题。
-  - [ ] 使用 `sys.stdin.isatty()` 区分有无管道输入，并在需要管道却收到空输入时给出 `|&` 捕获 `stderr` 的友好提示。
+  - [x] 注册 `init`、`reinit`、`trans`、`how`、`log`、`explain` 子命令。
+  - [x] 修复 `reinit` 未在读取 `stdin` 前返回的问题。
+  - [x] 使用 `sys.stdin.isatty()` 区分有无管道输入。
+  - [ ] 在需要管道却收到空输入时给出 `|&` 捕获 `stderr` 的友好提示。
 
 ### 第四阶段：本地验证与文档同步
-- [ ] **本地检查与模拟测试**：完成语法检查、`--help` 分发验证、无管道/有管道分支验证以及 SQLite 缓存读写测试。
+- [x] **本地检查与模拟测试**：完成语法检查、`--help` 分发验证、无管道/有管道分支验证以及 SQLite 缓存读写测试。
 - [ ] **更新文档**：同步更新 `README.md`、`AGENTS.md` 与 `doc/enviroment.md` 中的命令列表和配置说明。
