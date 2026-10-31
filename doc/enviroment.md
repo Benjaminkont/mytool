@@ -8,13 +8,13 @@
 
 - **Python 3.10 或更新版本：** 这是 README 中的要求，当前源码也使用了 `str | None` 等较新的类型语法。`pyproject.toml` 尚未用 `requires-python` 声明或强制检查这个版本范围。
 - **操作系统与终端：** 命令从标准输入读取文本，适合在支持管道的终端中运行。示例使用类 Unix 路径和 shell 命令；当前代码中的用户文件路径也是按 `Path.home()` 组合出来的。
-- **兼容 OpenAI 接口的模型服务：** `trans`、`find`、`sum`、`ask` 发起请求时需要有效的 `DEEPSEEK_API_KEY` 和 `BASE_URL`，以及可用的网络连接。代码目前使用 `deepseek-flash` 模型名；服务端是否支持该模型需要以实际配置和请求结果为准。缓存命中的 `trans` 不会发起模型请求。
+- **兼容 OpenAI 接口的模型服务：** `trans`、`how`、`log`、`explain` 和默认模式的 `woman` 需要有效的 `DEEPSEEK_API_KEY` 和 `BASE_URL`，以及可用的网络连接。代码目前使用 `deepseek-flash` 模型名；服务端是否支持该模型需要以实际配置和请求结果为准。`woman --original` 和缓存命中时不会发起模型请求。
 
 ### `pyproject.toml` 声明的第三方 Python 包
 
 - `openai`：创建 API 客户端并发送聊天请求。
 - `python-dotenv`：从用户配置文件加载环境变量。
-- `httpx2[socks]`：项目显式声明的网络依赖，包含 SOCKS 代理所需支持；曾用来解决 pipx 环境中缺少 `socksio` 的报错。
+- `httpx[socks]`：项目显式声明的网络依赖，包含 SOCKS 代理所需支持；曾用来解决 pipx 环境中缺少 `socksio` 的报错。
 
 这些依赖目前**没有固定版本**，仓库也没有锁定完整依赖树的 lock 文件。安装时实际取得的间接依赖及版本由当时的包仓库和安装环境决定。
 
@@ -22,7 +22,7 @@
 
 - 源码使用 `argparse`、`sys`、`os`、`pathlib` 和 `sqlite3` 等标准库；SQLite 翻译缓存不需要额外安装 Python 数据库包。
 - `pip` 用于安装项目及依赖；`venv` 可创建项目开发环境。`pipx` 是可选的**安装工具**，用于把 `mytool` 放进独立环境并暴露全局命令，不是 `pyproject.toml` 中的运行依赖。
-- `docker`、`git`、`man` 等是使用示例或后续设计中提到的外部命令，**不是安装 `mytool` 所必需的依赖**。当前 CLI 尚未提供 `man` 子命令。
+- `docker`、`git` 等是使用示例中的外部命令，不是安装 `mytool` 所必需的依赖。`woman` 运行时需要系统提供 `man`；首次生成或检查译文时还需要 `mandoc`。这两个命令不由 Python 包管理器安装。
 
 ## 2. 项目目录之外的文件和状态
 
@@ -75,6 +75,7 @@ BASE_URL=https://api.deepseek.com
 ```sh
 docker --help | mytool trans
 docker --help | mytool trans --refresh
+mytool woman printf --original
 ```
 
 第一次翻译未命中缓存时会调用模型，可能产生费用；相同原文再次输入会返回缓存。`--refresh` 跳过缓存查询并重新请求模型，成功后更新译文。真实 API 返回和上述安装流程尚未在本次文档编写中重新验证。

@@ -26,7 +26,7 @@
 ## 4. 分步执行计划（TODO Checklist）
 
 ### 第一阶段：项目依赖与公共基础设施（`pyproject.toml` & `config.py`）
-- [ ] **规范 `pyproject.toml`**：补充 `[build-system]`、`requires-python = ">=3.10"`、项目描述，将存疑的 `httpx2[socks]` 修正为标准的 `httpx[socks]`。
+- [ ] **规范 `pyproject.toml`**：补充 `[build-system]`、`requires-python = ">=3.10"` 和项目描述；网络依赖已统一为标准的 `httpx[socks]`。
 - [ ] **重构 `mytool/config.py`（或拆分为 `config.py` + `llm.py`）**：
   - [ ] 支持按需读取 `DEEPSEEK_API_KEY`、`BASE_URL` 与可选的 `DEEPSEEK_MODEL`（提供默认模型名）。
   - [ ] 封装获取当前操作系统与 Shell 环境信息的辅助函数。
@@ -54,4 +54,4 @@
 
 ### 第四阶段：本地验证与文档同步
 - [x] **本地检查与模拟测试**：完成语法检查、`--help` 分发验证、无管道/有管道分支验证以及 SQLite 缓存读写测试。
-- [ ] **更新文档**：同步更新 `README.md`、`AGENTS.md` 与 `doc/enviroment.md` 中的命令列表和配置说明。
+- [x] **更新文档**：已同步更新 `README.md`、`AGENTS.md`、`doc/enviroment.md` 和 `doc/woman.md` 中的命令列表、配置说明与 woman 接口状态。
