@@ -3,7 +3,7 @@ name = "mytool"
 version = "0.1.0"
 requires-python = ">=3.10"
 
-dependencies = ["openai", "python-dotenv", "httpx2[socks]", "rich"]
+dependencies = ["openai", "python-dotenv", "httpx[socks]", "rich"]
 
 
 [project.scripts]

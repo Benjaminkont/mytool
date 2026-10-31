@@ -6,10 +6,10 @@ from typing import NoReturn
 
 from openai import APIError
 
-from mytool.commands.ask import ask
-from mytool.commands.find import find
+from mytool.commands.explain import explain
+from mytool.commands.how import how
 from mytool.commands.init import init, reinit
-from mytool.commands.summary import summary
+from mytool.commands.log import log
 from mytool.commands.trans import translate
 from mytool.commands.woman import woman
 from mytool.hook import hook_fetch
@@ -70,35 +70,6 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         action="store_true",
         help="跳过缓存并重新翻译",
     )
-
-    find_parser = add_command(
-        sub_parser,
-        "find",
-        help="根据命令帮助文本回答用法问题",
-        description="把某个命令的帮助文本通过管道传入，再用参数提出问题，回答该命令怎么用。",
-        epilog='示例:\n  git log --help | mytool find "怎么只看最近 5 条提交"',
-    )
-    find_parser.set_defaults(func=find)
-    find_parser.add_argument("question", help="想问的问题，含空格时请加引号")
-
-    summary_parser = add_command(
-        sub_parser,
-        "sum",
-        help="总结输入的文本",
-        description="把通过管道传入的文本总结成中文摘要。",
-        epilog="示例:\n  cat README.md | mytool sum",
-    )
-    summary_parser.set_defaults(func=summary)
-
-    ask_parser = add_command(
-        sub_parser,
-        "ask",
-        help="根据输入的文本回答问题（侧重日志分析）",
-        description="把日志等文本通过管道传入，再用参数提出问题，根据文本内容作答。",
-        epilog='示例:\n  cat app.log | mytool ask "为什么启动失败"',
-    )
-    ask_parser.set_defaults(func=ask)
-    ask_parser.add_argument("question", help="想问的问题，含空格时请加引号")
 
     init_parser = add_command(
         sub_parser,
@@ -226,6 +197,15 @@ def main() -> None:
 
         elif args.command == "find" or args.command == "ask":
             result = args.func(text, args.question)
+
+        elif args.command == "log":
+            result = args.func(
+                text,
+                question=args.question,
+                command=cmd,
+                apply_filter=args.apply_filter,
+                no_filter=args.no_filter,
+            )
 
     except RuntimeError as error:
         parser.exit(1, f"error: {error}\n")
