@@ -106,7 +106,7 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         sub_parser,
         "woman",
         help="在终端中查看 man 手册",
-        description="按手册名称查看中文 man 手册，无需管道输入。翻译与展示功能尚未实现。",
+        description="按手册名称查看 man 手册；默认翻译并缓存中文译文，也可以查看英文原文。",
         epilog=(
             "示例:\n"
             "  mytool woman ls\n"
