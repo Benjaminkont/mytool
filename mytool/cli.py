@@ -231,7 +231,7 @@ def main() -> None:
         parser.exit(1, f"error: {error}\n")
 
     except APIError as error:
-        parser.exit(1, f"error: API 请求失败（{type(error).__name__}）\n")
+        parser.exit(1, f"error: API 请求失败（{type(error).__name__}）: {error}\n")
 
     if result is None:
         parser.exit(1, "error: 模型没有返回文本\n")
