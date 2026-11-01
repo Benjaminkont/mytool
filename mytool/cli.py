@@ -6,12 +6,11 @@ from typing import NoReturn
 
 from openai import APIError
 
-
-from mytool.commands.init import init, reinit
-from mytool.commands.trans import translate
-from mytool.commands.how import how
 from mytool.commands.explain import explain
+from mytool.commands.how import how
+from mytool.commands.init import init, reinit
 from mytool.commands.log import log
+from mytool.commands.trans import translate
 from mytool.commands.woman import woman
 from mytool.hook import hook_fetch
 
@@ -119,9 +118,7 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
     woman_parser.add_argument("manual_name", help="要查看的手册名称")
     woman_parser.add_argument("--section", help="指定手册章节号")
     woman_mode = woman_parser.add_mutually_exclusive_group()
-    woman_mode.add_argument(
-        "--refresh", action="store_true", help="跳过缓存并重新翻译"
-    )
+    woman_mode.add_argument("--refresh", action="store_true", help="跳过缓存并重新翻译")
     woman_mode.add_argument(
         "--original", action="store_true", help="显示原始 man 手册，不进行翻译"
     )
@@ -161,13 +158,12 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         "log",
         help="分析管道传入的命令输出或日志",
         description=(
-            "必须通过管道传入日志。没有问题时自动总结异常；"
-            "提供问题时针对该问题分析。"
+            "必须通过管道传入日志。没有问题时自动总结异常；提供问题时针对该问题分析。"
         ),
         epilog=(
             "示例:\n"
             "  journalctl -n 100 | mytool log\n"
-            "  docker ps -a | mytool log \"为什么退出了\""
+            '  docker ps -a | mytool log "为什么退出了"'
         ),
     )
     log_parser.set_defaults(func=log)
