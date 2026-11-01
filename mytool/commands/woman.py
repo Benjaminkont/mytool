@@ -1,3 +1,6 @@
+# mytool/commands/woman.py
+
+
 import gzip
 import hashlib
 import subprocess
@@ -165,9 +168,7 @@ def check_roff(page: Path) -> None:
             check=False,
         )
     except FileNotFoundError as error:
-        raise RuntimeError(
-            "系统中未找到 mandoc，无法验证翻译后的手册格式"
-        ) from error
+        raise RuntimeError("系统中未找到 mandoc，无法验证翻译后的手册格式") from error
 
     if result.returncode != 0:
         raise RuntimeError(

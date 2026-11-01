@@ -6,12 +6,11 @@ from typing import NoReturn
 
 from openai import APIError
 
-
-from mytool.commands.init import init, reinit
-from mytool.commands.trans import translate
-from mytool.commands.how import how
 from mytool.commands.explain import explain
+from mytool.commands.how import how
+from mytool.commands.init import init, reinit
 from mytool.commands.log import log
+from mytool.commands.trans import translate
 from mytool.commands.woman import woman
 from mytool.hook import hook_fetch
 
@@ -110,18 +109,16 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         epilog=(
             "示例:\n"
             "  mytool woman ls\n"
-            "  mytool woman printf --section 3\n"
+            "  mytool woman 3 printf\n"
             "  mytool woman ls --refresh\n"
             "  mytool woman ls --original"
         ),
     )
     woman_parser.set_defaults(func=woman)
+    woman_parser.add_argument("section", nargs="?", help="指定手册章节号")
     woman_parser.add_argument("manual_name", help="要查看的手册名称")
-    woman_parser.add_argument("--section", help="指定手册章节号")
     woman_mode = woman_parser.add_mutually_exclusive_group()
-    woman_mode.add_argument(
-        "--refresh", action="store_true", help="跳过缓存并重新翻译"
-    )
+    woman_mode.add_argument("--refresh", action="store_true", help="跳过缓存并重新翻译")
     woman_mode.add_argument(
         "--original", action="store_true", help="显示原始 man 手册，不进行翻译"
     )
@@ -161,13 +158,12 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         "log",
         help="分析管道传入的命令输出或日志",
         description=(
-            "必须通过管道传入日志。没有问题时自动总结异常；"
-            "提供问题时针对该问题分析。"
+            "必须通过管道传入日志。没有问题时自动总结异常；提供问题时针对该问题分析。"
         ),
         epilog=(
             "示例:\n"
             "  journalctl -n 100 | mytool log\n"
-            "  docker ps -a | mytool log \"为什么退出了\""
+            '  docker ps -a | mytool log "为什么退出了"'
         ),
     )
     log_parser.set_defaults(func=log)
@@ -214,40 +210,38 @@ def main() -> None:
             parser.error(f"'{args.topic}' 不是 mytool 的命令")
         return
 
-    if args.command == "init" or args.command == "reinit":
-        args.func()
-        return
+    result: str | None = None
 
-    if args.command == "woman":
-        try:
+    try:
+        if args.command == "init" or args.command == "reinit":
+            args.func()
+            return
+
+        # woman 不读管道，但翻译时会调用模型，所以也放在 try 里
+        if args.command == "woman":
             args.func(
                 args.manual_name,
                 section=args.section,
                 refresh=args.refresh,
                 original=args.original,
             )
-        except RuntimeError as error:
-            parser.exit(1, f"error: {error}\n")
-        return
+            return
 
-    command_parser = commands[args.command]
+        command_parser = commands[args.command]
 
-    cmd = hook_fetch()
+        cmd = hook_fetch()
 
-    # 只有标准输入不是终端时才读取，避免无管道运行时一直等待输入。
-    has_stdin = not sys.stdin.isatty()
-    text: str | None = None
+        # 只有标准输入不是终端时才读取，避免无管道运行时一直等待输入。
+        has_stdin = not sys.stdin.isatty()
+        text: str | None = None
 
-    if has_stdin:
-        text = sys.stdin.read()
-        if verify(text):
-            command_parser.error("管道传入的文本为空")
-    elif args.command not in ("how", "explain"):
-        command_parser.error("没有收到管道输入")
+        if has_stdin:
+            text = sys.stdin.read()
+            if verify(text):
+                command_parser.error("管道传入的文本为空")
+        elif args.command not in ("how", "explain"):
+            command_parser.error("没有收到管道输入")
 
-    result = ""
-
-    try:
         if args.command == "how":
             result = args.func(text, args.question, command=cmd)
 
@@ -276,7 +270,7 @@ def main() -> None:
         parser.exit(1, f"error: {error}\n")
 
     except APIError as error:
-        parser.exit(1, f"error: API 请求失败（{type(error).__name__}）\n")
+        parser.exit(1, f"error: API 请求失败（{type(error).__name__}）: {error}\n")
 
     if result is None:
         parser.exit(1, "error: 模型没有返回文本\n")
