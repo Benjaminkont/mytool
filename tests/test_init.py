@@ -32,8 +32,7 @@ class InitializationTests(unittest.TestCase):
     def prepare_existing_state(self):
         init_commands.init()
         self.env_path.write_text(
-            "DEEPSEEK_API_KEY=test-placeholder\n"
-            "BASE_URL=https://example.invalid\n",
+            "DEEPSEEK_API_KEY=test-placeholder\nBASE_URL=https://example.invalid\n",
             encoding="utf-8",
         )
         cache.save("demo --help", "hello", "你好")
