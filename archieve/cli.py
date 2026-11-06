@@ -3,32 +3,30 @@ from __future__ import annotations
 import argparse
 import sys
 
-from openai import APIError
-
 from mytool.commands.ask import ask
 from mytool.commands.find import find
-from mytool.commands.init import init, reinit
 from mytool.commands.summary import summary
+from openai import APIError
+
+from mytool.commands.init import init, reinit
 from mytool.commands.trans import translate
 from mytool.hook import hook_fetch
 
 
-def verify(text : str) -> bool:
+def verify(text: str) -> bool:
     return len(text.strip()) == 0
-
 
 
 def main():
     parser = argparse.ArgumentParser("一个个人工具箱")
 
-    sub_parser = parser.add_subparsers(
-        dest="command",
-        required=True
-    )
+    sub_parser = parser.add_subparsers(dest="command", required=True)
 
     trans_parser = sub_parser.add_parser("trans")
     trans_parser.set_defaults(func=translate)
-    trans_parser.add_argument("--refresh", action="store_true", help="跳过缓存并重新翻译")
+    trans_parser.add_argument(
+        "--refresh", action="store_true", help="跳过缓存并重新翻译"
+    )
 
     find_parser = sub_parser.add_parser("find")
     find_parser.set_defaults(func=find)
@@ -44,12 +42,14 @@ def main():
     init_parser = sub_parser.add_parser("init")
     init_parser.set_defaults(func=init)
 
-    reinit_parser = sub_parser.add_parser("reinit", help="清空翻译缓存，保留已有 API 配置")
+    reinit_parser = sub_parser.add_parser(
+        "reinit", help="清空翻译缓存，保留已有 API 配置"
+    )
     reinit_parser.set_defaults(func=reinit)
 
     args = parser.parse_args()
 
-    if(args.command == "init" or args.command == "reinit"):
+    if args.command == "init" or args.command == "reinit":
         args.func()
         return
 
@@ -68,10 +68,8 @@ def main():
         elif args.command == "sum":
             result = args.func(text)
 
-        elif(args.command == "find" or args.command == "ask"):
+        elif args.command == "find" or args.command == "ask":
             result = args.func(text, args.question)
-
-
 
     except RuntimeError as error:
         parser.exit(1, f"mytool: {error}\n")

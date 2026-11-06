@@ -5,11 +5,14 @@ import sys
 from typing import NoReturn
 
 from openai import APIError
+from rich.console import Console
+from rich.markdown import Markdown
 
 from mytool.commands.explain import explain
 from mytool.commands.how import how
 from mytool.commands.init import init, reinit
 from mytool.commands.log import log
+from mytool.commands.namer import name
 from mytool.commands.trans import translate
 from mytool.commands.woman import woman
 from mytool.hook import hook_fetch
@@ -186,6 +189,30 @@ def build_parser() -> tuple[MytoolParser, dict[str, MytoolParser]]:
         help="强制把完整日志传给模型",
     )
 
+    name_parser = add_command(
+        sub_parser,
+        "name",
+        help="根据文件用途和项目上下文，提供专业的英文命名方案",
+        description=(
+            "根据用户描述的文件用途、所属语言或项目上下文，提供地道、专业的文件英文命名方案，并深入解释命名背后的逻辑。"
+        ),
+        epilog=(
+            "示例:\n"
+            '  mytool name "一个用于解析 JSON 配置文件的 Python 模块"\n'
+            '  mytool name "一个用于处理用户认证的 Node.js 中间件"\n'
+            '  mytool name "一个用于生成 HTML 报告的 Java 类"\n'
+        ),
+    )
+    name_parser.set_defaults(func=name)
+    name_parser.add_argument(
+        "idea",
+        help="描述文件用途、所属语言或项目上下文的文本，含空格时记得加引号",
+    )
+    name_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="使用简单命名模式",
+    )
     return parser, sub_parser.choices
 
 
@@ -224,6 +251,13 @@ def main() -> None:
                 section=args.section,
                 refresh=args.refresh,
                 original=args.original,
+            )
+            return
+
+        if args.command == "name":
+            args.func(
+                args.idea,
+                args.verbose,
             )
             return
 
@@ -266,6 +300,7 @@ def main() -> None:
                 no_filter=args.no_filter,
             )
 
+
     except RuntimeError as error:
         parser.exit(1, f"error: {error}\n")
 
@@ -275,7 +310,8 @@ def main() -> None:
     if result is None:
         parser.exit(1, "error: 模型没有返回文本\n")
 
-    print(result)
+    console = Console()
+    console.print(Markdown(result))
 
 
 if __name__ == "__main__":

@@ -7,7 +7,6 @@ import platform
 
 from openai.types.chat import ChatCompletionMessageParam
 
-
 SYSTEM_PROMPT = """
 你是一个命令行使用助手。
 

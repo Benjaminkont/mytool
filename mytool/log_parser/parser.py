@@ -6,7 +6,6 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
-
 _ERROR_RE = re.compile(
     r"\b(?:error|err|fatal|critical|exception|traceback|panic)\b"
     r"|失败|异常|超时|timed\s*out|connection\s+refused|permission\s+denied",
